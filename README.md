@@ -8,7 +8,7 @@ Volante module which handles logging volante log events to console.log.
 npm install volante-console
 ```
 
-Volante modules are automatically loaded if they are found in the `node_modules` directory.
+Volante modules are automatically loaded and instanced if they are installed locally and `hub.attachAll()` is called.
 
 ## Options
 
@@ -21,3 +21,7 @@ hub.emit('volante-console.options', {
   srcFilter: String or RegExp // default: null
 });
 ```
+
+## License
+
+ISC

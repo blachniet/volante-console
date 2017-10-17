@@ -29,6 +29,10 @@ class ConsoleLogger extends volante.Spoke {
     this.hub.on('volante-console.options', (opts) => {
       Object.assign(this.options, opts);
     });
+
+    // print header
+    console.log(chalk.blue(`Volante v${volante.version}`));
+    console.log(chalk.blue(`console logging powered by volante-console`));
   }
 
   //
