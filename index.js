@@ -14,6 +14,7 @@ class ConsoleLogger extends volante.Spoke {
     this.options = {
       timestamp: false,
       level: 'any',
+      stringify: true,
       srcFilter: null
     };
 
@@ -45,7 +46,13 @@ class ConsoleLogger extends volante.Spoke {
       if (this.options.timestamp) {
         line += chalk.magenta((new Date).toISOString() + " | ");
       }
-      line += `${this.renderLevel(obj)} | ${obj.src} | ${obj.msg}`;
+      line += `${this.renderLevel(obj)} | ${obj.src} | `;
+      // stringify objects
+      if (this.options.stringify && typeof(obj.msg) === 'object') {
+        line += JSON.stringify(obj.msg);
+      } else {
+        line += `${obj.msg}`;
+      }
       console.log(line);
     }
   }
