@@ -15,7 +15,8 @@ class ConsoleLogger extends volante.Spoke {
       timestamp: false,
       level: 'any',
       stringify: true,
-      srcFilter: null
+      srcFilter: null,
+      exitOnError: false
     };
 
     this.hub.on('volante.log', (obj) => {
@@ -24,8 +25,9 @@ class ConsoleLogger extends volante.Spoke {
     this.hub.on('volante.debug', (obj) => {
       this.render(obj);
     });
-    this.hub.on('volante.error', (obj) => {
+    this.hub.on('error', (obj) => {
       this.render(obj);
+      this.options.exitOnError && process.exit(1);
     });
     this.hub.on('volante-console.options', (opts) => {
       Object.assign(this.options, opts);
