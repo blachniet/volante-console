@@ -5,10 +5,7 @@ const chalk = require('chalk');
 // console using color provided by the chalk module.
 //
 module.exports = {
-	name: 'ConsoleLogger',
-  //
-  // volante init()
-  //
+	name: 'VolanteConsole',
   init() {
     // print header
     console.log(chalk.blue(`Volante v${this.$hub.version}`));
@@ -16,9 +13,6 @@ module.exports = {
   },
 	events: {
     'volante.log'(obj) {
-      this.render(obj);
-    },
-    'volante.debug'(obj) {
       this.render(obj);
     },
     error(obj) {
@@ -65,6 +59,8 @@ module.exports = {
 	        return chalk.cyan("DBG");
 	      case 'error':
 	        return chalk.red("ERR");
+				case 'warning':
+					return chalk.yellow('WRN');
 	      case 'log':
 	      default:
 	        return chalk.green("LOG");
