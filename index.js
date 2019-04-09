@@ -26,6 +26,7 @@ module.exports = {
     stringify: true,
     srcFilter: null,
     exitOnError: false,
+    srcLen: 16,
 	},
 	methods: {
 	  //
@@ -39,14 +40,15 @@ module.exports = {
 	        line += chalk.magenta((new Date).toISOString());
 					line += " | ";
 	      }
-	      line += `${this.renderLevel(obj)} | ${obj.src} | `;
+	      line += `${this.renderLevel(obj)} | `;
+	      line += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
 	      // stringify objects
 	      if (this.stringify && typeof(obj.msg) === 'object') {
 	        line += JSON.stringify(obj.msg);
+		      console.log(line);
 	      } else {
-	        line += `${obj.msg}`;
+		      console.log(line, obj.msg);
 	      }
-	      console.log(line);
 	    }
 	  },
 
@@ -94,5 +96,5 @@ module.exports = {
 	    return true;
 	  },
 	}
-}
+};
 
