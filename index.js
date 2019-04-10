@@ -44,7 +44,7 @@ module.exports = {
 	      line += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
 	      // stringify objects
 	      if (this.stringify && typeof(obj.msg) === 'object') {
-	        line += JSON.stringify(obj.msg);
+	        line += ` ${JSON.stringify(obj.msg)}`;
 		      console.log(line);
 	      } else {
 		      console.log(line, obj.msg);
