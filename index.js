@@ -17,7 +17,7 @@ module.exports = {
 		console.log(chalk.bold.blue('    \\__/     '));
 
 		// add q handler if tty
-		if (Boolean(process.stdout.isTTY)){
+		if (Boolean(process.stdout.isTTY) && process.stdin.setRawMode){
 			const readline = require('readline');
 			readline.emitKeypressEvents(process.stdin);
 			process.stdin.setRawMode(true);
