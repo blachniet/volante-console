@@ -9,7 +9,7 @@ module.exports = {
 	name: 'VolanteConsole',
   init() {
     // print header
-    console.log(chalk.white.bgBlue(`☸  ︎Volante v${this.$hub.version} `));
+    console.log(chalk.white.bgBlue(`☸️  ︎Volante v${this.$hub.version} `));
     console.log(chalk.white.bgBlue(`🖥  console logging powered by volante-console `));
   },
 	events: {
