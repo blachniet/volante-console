@@ -9,8 +9,24 @@ module.exports = {
 	name: 'VolanteConsole',
   init() {
     // print header
-    console.log(chalk.white.bgBlue(`☸️  ︎Volante v${this.$hub.version} `));
-    console.log(chalk.white.bgBlue(`🖥  console logging powered by volante-console `));
+		console.log(chalk.bold.blue('____    ____ '));
+		console.log(chalk.bold.blue(`\\   \\  /   / Powered by Volante v${this.$hub.version}`));
+		console.log(chalk.bold.blue(` \\   \\/   /  ${(new Date).toISOString()}`));
+		console.log(chalk.bold.blue('  \\      /   console logging powered by volante-console'));
+		console.log(chalk.bold.blue('   \\    /    press q to shutdown'));
+		console.log(chalk.bold.blue('    \\__/     '));
+
+		// add q handler if tty
+		if (Boolean(process.stdout.isTTY)){
+			const readline = require('readline');
+			readline.emitKeypressEvents(process.stdin);
+			process.stdin.setRawMode(true);
+			process.stdin.on('keypress', (str, key) => {
+				if ((key.ctrl && key.name === 'c') || key.name === 'q') {
+					this.$shutdown();
+				}
+		  });
+		}
   },
 	events: {
     'volante.log'(obj) {
