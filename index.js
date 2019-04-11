@@ -1,4 +1,5 @@
 const chalk = require('chalk');
+const util = require('util');
 
 //
 // handles logging events from the volante.Hub and renders them to
@@ -8,8 +9,8 @@ module.exports = {
 	name: 'VolanteConsole',
   init() {
     // print header
-    console.log(chalk.blue(`Volante v${this.$hub.version}`));
-    console.log(chalk.blue(`console logging powered by volante-console`));
+    console.log(chalk.white.bgBlue(`☸  ︎Volante v${this.$hub.version} `));
+    console.log(chalk.white.bgBlue(`🖥  console logging powered by volante-console `));
   },
 	events: {
     'volante.log'(obj) {
@@ -23,7 +24,6 @@ module.exports = {
 	props: {
     timestamp: false,
     level: 'any',
-    stringify: true,
     srcFilter: null,
     exitOnError: false,
     srcLen: 16,
@@ -35,20 +35,28 @@ module.exports = {
 	  render(obj) {
 	    // log if any filters match
 	    if (this.checkFilters(obj)) {
-	      var line = "";
+	      let header = '';
 	      if (this.timestamp) {
-	        line += chalk.magenta((new Date).toISOString());
-					line += " | ";
+	        header += chalk.magenta((new Date).toISOString());
+					header += " | ";
 	      }
-	      line += `${this.renderLevel(obj)} | `;
-	      line += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
-	      // stringify objects
-	      if (this.stringify && typeof(obj.msg) === 'object') {
-	        line += ` ${JSON.stringify(obj.msg)}`;
-		      console.log(line);
-	      } else {
-		      console.log(line, obj.msg);
+	      // log level
+	      header += `${this.renderLevel(obj)} | `;
+	      // padded volante module name
+	      header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
+	      // log content items
+	      let content = [];
+	      for (let m of obj.msg) {
+	      	if (typeof(m) === 'object') {
+		      	content.push(util.inspect(m, {
+	      			colors: true,
+	      			breakLength: Infinity,
+	      		}));
+	      	} else {
+	      		content.push(this.renderColor(obj.lvl, m));
+	      	}
 	      }
+    		console.log(this.renderColor(obj.lvl, header), content.join(', '));
 	    }
 	  },
 
@@ -58,14 +66,28 @@ module.exports = {
 	  renderLevel(obj) {
 	    switch (obj.lvl) {
 	      case 'debug':
-	        return chalk.cyan("DBG");
+	        return "DBG";
 	      case 'error':
-	        return chalk.red("ERR");
+	        return "ERR";
 				case 'warning':
-					return chalk.yellow('WRN');
+					return 'WRN';
 	      case 'log':
 	      default:
-	        return chalk.green("LOG");
+	        return "LOG";
+	    }
+	  },
+
+	  renderColor(lvl, str) {
+	  	switch (lvl) {
+	      case 'debug':
+	        return chalk.cyan(str);
+	      case 'error':
+	        return chalk.red(str);
+				case 'warning':
+					return chalk.yellow(str);
+	      case 'log':
+	      default:
+	        return chalk.green(str);
 	    }
 	  },
 
