@@ -53,7 +53,7 @@ module.exports = {
 	    if (this.checkFilters(obj)) {
 	      let header = '';
 	      if (this.timestamp) {
-	        header += chalk.magenta((new Date).toISOString());
+	        header += chalk.magenta(obj.ts.toISOString());
 					header += " | ";
 	      }
 	      // log level
