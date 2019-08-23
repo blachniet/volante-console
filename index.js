@@ -31,10 +31,9 @@ module.exports = {
 	events: {
     'volante.log'(obj) {
       this.render(obj);
-    },
-    error(obj) {
-      this.render(obj);
-      this.exitOnError && process.exit(1);
+      if (obj.lvl === 'error') {
+	      this.exitOnError && process.exit(1);
+      }
     },
 	},
 	props: {
