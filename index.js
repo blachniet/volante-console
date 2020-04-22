@@ -135,3 +135,24 @@ module.exports = {
 	}
 };
 
+if (require.main === module) {
+	console.log('running test volante wheel');
+	const volante = require('volante');
+
+	let hub = new volante.Hub().debug();
+
+	hub.attachAll().attachFromObject(module.exports);
+	
+	hub.attachFromObject({
+		name: 'TestSpoke',
+		init() {
+			this.$log('example log msg');
+			this.$debug('example debug msg');
+			this.$warn('example warning msg');
+			this.$error('example error msg');
+			this.$log('example object', { testVal: 1, testString: 'hello'});
+			this.$log('example with lots of arguments', 1, 2, 3, 4, 5, 'six');
+			this.$shutdown();
+		},
+	});
+}

@@ -15,7 +15,7 @@ Volante Spokes are automatically loaded and instanced if they are installed loca
 Options are changed using the `VolanteConsole.props` event with an options object (shown with defaults):
 
 ```js
-hub.emit('VolanteConsole.props', {
+hub.emit('VolanteConsole.update', {
   timestamp: false, // write timestamp
   level: 'any',     // level filter ['any', 'normal', 'debug', 'warning', 'error']
   stringify: true,  // call JSON.stringify for Objects
