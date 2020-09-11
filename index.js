@@ -7,8 +7,8 @@ const util = require('util');
 //
 module.exports = {
 	name: 'VolanteConsole',
-  init() {
-    // print header
+	init() {
+		// print header
 		console.log(chalk.bold.blue('____    ____ '));
 		console.log(chalk.bold.blue(`\\   \\  /   / Powered by Volante v${this.$hub.version}`));
 		console.log(chalk.bold.blue(` \\   \\/   /  ${(new Date).toISOString()}`));
@@ -25,113 +25,118 @@ module.exports = {
 				if ((key.ctrl && key.name === 'c') || key.name === 'q') {
 					this.$shutdown();
 				}
-		  });
+			});
 		}
-  },
+	},
 	events: {
-    'volante.log'(obj) {
-      this.render(obj);
-      if (obj.lvl === 'error') {
-	      this.exitOnError && process.exit(1);
-      }
-    },
+		'volante.log'(obj) {
+			this.render(obj);
+			if (obj.lvl === 'error') {
+				this.exitOnError && process.exit(1);
+			}
+		},
 	},
 	props: {
-    timestamp: false,
-    level: 'any',
-    srcFilter: null,
-    exitOnError: false,
-    srcLen: 16,
+		timestamp: false,
+		level: 'any',
+		srcFilter: null,
+		exitOnError: false,
+		srcLen: 16,
 	},
 	methods: {
-	  //
-	  // main entry point for log rendering
-	  //
-	  render(obj) {
-	    // log if any filters match
-	    if (this.checkFilters(obj)) {
-	      let header = '';
-	      if (this.timestamp) {
-	        header += chalk.magenta(obj.ts.toISOString());
+		//
+		// main entry point for log rendering
+		//
+		render(obj) {
+			// log if any filters match
+			if (obj &&
+			    obj.lvl &&
+			    this.checkFilters(obj) &&
+			    obj.ts &&
+			    obj.src &&
+			    obj.msg) {
+				let header = '';
+				if (this.timestamp) {
+					header += chalk.magenta(obj.ts.toISOString());
 					header += " | ";
-	      }
-	      // log level
-	      header += `${this.renderLevel(obj)} | `;
-	      // padded volante module name
-	      header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
-	      // log content items
-	      let content = [];
-	      for (let m of obj.msg) {
-	      	if (typeof(m) === 'object') {
-		      	content.push(util.inspect(m, {
-	      			colors: true,
-	      			breakLength: Infinity,
-	      		}));
-	      	} else {
-	      		content.push(this.renderColor(obj.lvl, m));
-	      	}
-	      }
-    		console.log(this.renderColor(obj.lvl, header), content.join(', '));
-	    }
-	  },
+				}
+				// log level
+				header += `${this.renderLevel(obj)} | `;
+				// padded volante module name
+				header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
+				// log content items
+				let content = [];
+				for (let m of obj.msg) {
+					if (typeof(m) === 'object') {
+						content.push(util.inspect(m, {
+							colors: true,
+							breakLength: Infinity,
+						}));
+					} else {
+						content.push(this.renderColor(obj.lvl, m));
+					}
+				}
+				console.log(this.renderColor(obj.lvl, header), content.join(', '));
+			}
+		},
 
-	  //
-	  // render the log level
-	  //
-	  renderLevel(obj) {
-	    switch (obj.lvl) {
-	      case 'debug':
-	        return "DBG";
-	      case 'error':
-	        return "ERR";
+		//
+		// render the log level
+		//
+		renderLevel(obj) {
+			switch (obj.lvl) {
+				case 'debug':
+					return "DBG";
+				case 'error':
+					return "ERR";
 				case 'warning':
 					return 'WRN';
-	      case 'log':
-	      default:
-	        return "LOG";
-	    }
-	  },
+				case 'log':
+				default:
+					return "LOG";
+			}
+		},
 
-	  renderColor(lvl, str) {
-	  	switch (lvl) {
-	      case 'debug':
-	        return chalk.cyan(str);
-	      case 'error':
-	        return chalk.red(str);
+		renderColor(lvl, str) {
+			switch (lvl) {
+				case 'debug':
+					return chalk.cyan(str);
+				case 'error':
+					return chalk.red(str);
 				case 'warning':
 					return chalk.yellow(str);
-	      case 'log':
-	      default:
-	        return chalk.green(str);
-	    }
-	  },
+				case 'log':
+				default:
+					return chalk.green(str);
+			}
+		},
 
-	  //
-	  // main entry point for log rendering
-	  //
-	  checkFilters(obj) {
-	    // check log level filtering if not 'any'
-	    if (this.level !== 'any') {
-	      if (obj.lvl !== this.level) {
-	        return false;
-	      }
-	    }
-	    // check src filter
-	    if (this.srcFilter) {
-	      // see if string
-	      if (typeof(this.srcFilter) === 'string') {
-	        if (obj.src !== this.srcFilter) {
-	          return false;
-	        }
-	      }
-	      if (this.srcFilter instanceof RegExp) {
-	        if (!obj.src.match(this.srcFilter)) {
-	          return false;
-	        }
-	      }
-	    }
-	    return true;
-	  },
+		//
+		// main entry point for log rendering
+		//
+		checkFilters(obj) {
+			// check log level filtering if not 'any'
+			if (this.level !== 'any') {
+				if (obj.lvl !== this.level) {
+					return false;
+				}
+			}
+			// check src filter
+			if (this.srcFilter) {
+				// see if string
+				if (typeof(this.srcFilter) === 'string') {
+					if (obj.src !== this.srcFilter) {
+						return false;
+					}
+				}
+				if (this.srcFilter instanceof RegExp) {
+					if (!obj.src.match(this.srcFilter)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		},
 	}
 };
 
@@ -142,7 +147,7 @@ if (require.main === module) {
 	let hub = new volante.Hub().debug();
 
 	hub.attachAll().attachFromObject(module.exports);
-	
+
 	hub.attachFromObject({
 		name: 'TestSpoke',
 		init() {
