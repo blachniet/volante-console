@@ -24,7 +24,7 @@ module.exports = {
     console.log(chalk.bgBlue('   \\\\\\\\////   ')  + chalk.bold.blue(' press f to filter'));
     console.log(chalk.bgBlue('    \\\\\\///    ')   + chalk.bold.blue(' press t to toggle timestamps'));
     console.log(chalk.bgBlue('     \\\\//     ')    + chalk.bold.blue(' press c to toggle compact inspect'));
-    console.log(chalk.bgBlue('              ')      + chalk.bold.blue(' press s to toggle status check'));
+    console.log(chalk.bgBlue('      \\/      ')      + chalk.bold.blue(' press s to toggle status check'));
     console.log(chalk.bgBlue('              ')      + chalk.bold.blue(' press p to pause output'));
 
     // add keypress handler if tty

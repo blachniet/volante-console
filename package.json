@@ -10,10 +10,10 @@
     "test": "node ./index.js"
   },
   "dependencies": {
-    "chalk": "^2.3.2"
+    "chalk": "^4.1.2"
   },
   "devDependencies": {
-    "volante": "^3.0.0"
+    "volante": "^4.2.0"
   },
   "keywords": [
     "volante"
