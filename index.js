@@ -50,7 +50,7 @@ module.exports = {
         }
       });
     }
-    this.$ready();
+    this.$ready('console ready');
   },
   events: {
     'volante.log'(obj) {
@@ -93,7 +93,7 @@ module.exports = {
         // log level
         header += `${this.renderLevel(obj)} | `;
         // padded volante module name
-        header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } |`;
+        header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } | `;
         // log content items
         let content = [];
         for (let m of obj.msg) {
@@ -107,7 +107,7 @@ module.exports = {
             content.push(this.renderColor(obj.lvl, m));
           }
         }
-        console.log(this.renderColor(obj.lvl, header), content.join(', '));
+        console.log(`${this.renderColor(obj.lvl, header)}${content.join(', ')}`);
       }
     },
     //
@@ -121,6 +121,8 @@ module.exports = {
           return "ERR";
         case 'warning':
           return 'WRN';
+        case 'ready':
+          return 'RDY';
         case 'log':
         default:
           return "LOG";
@@ -134,9 +136,11 @@ module.exports = {
         case 'debug':
           return chalk.cyan(str);
         case 'error':
-          return chalk.red(str);
+          return chalk.bgRed(str);
         case 'warning':
           return chalk.yellow(str);
+        case 'ready':
+          return chalk.bgGreen(str);
         case 'log':
         default:
           return chalk.green(str);
