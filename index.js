@@ -7,15 +7,25 @@ const util = require('util');
 //
 module.exports = {
   name: 'VolanteConsole',
+  props: {
+    timestamp: false,   // show timestamp column
+    compact: true,      // option for util.inspect
+    showStatus: true,   // show overall status as check or x
+    level: 'any',       // level filter
+    filter: null,       // string or RegExp filter for entire content
+    exitOnError: false, // trigger $shutdown on error
+    srcLen: 16,         // width of source (usually spoke name) column
+  },
   init() {
     // print header
-    console.log(chalk.bold.blue('____    ____ '));
-    console.log(chalk.bold.blue(`\\   \\  /   / Powered by Volante v${this.$hub.version}`));
-    console.log(chalk.bold.blue(` \\   \\/   /  ${(new Date).toISOString()}`));
-    console.log(chalk.bold.blue('  \\      /   console logging powered by volante-console'));
-    console.log(chalk.bold.blue('   \\    /    press q to shutdown'));
-    console.log(chalk.bold.blue('    \\__/     press f to filter'));
-    console.log(chalk.bold.blue('             press t to toggle timestamps'));
+    console.log(chalk.bgBlue(' ____    ____ ')   + chalk.bold.blue(` Powered by Volante v${this.$hub.version}`));
+    console.log(chalk.bgBlue(' \\\\\\\\\\  ///// ') + chalk.bold.blue(` ${(new Date).toISOString()}`));
+    console.log(chalk.bgBlue('  \\\\\\\\\\/////  ') + chalk.bold.blue(' press q to shutdown'));
+    console.log(chalk.bgBlue('   \\\\\\\\////   ')  + chalk.bold.blue(' press f to filter'));
+    console.log(chalk.bgBlue('    \\\\\\///    ')   + chalk.bold.blue(' press t to toggle timestamps'));
+    console.log(chalk.bgBlue('     \\\\//     ')    + chalk.bold.blue(' press c to toggle compact inspect'));
+    console.log(chalk.bgBlue('              ')      + chalk.bold.blue(' press s to toggle status check'));
+    console.log(chalk.bgBlue('              ')      + chalk.bold.blue(' press p to pause output'));
 
     // add keypress handler if tty
     if (Boolean(process.stdout.isTTY) && process.stdin.setRawMode){
@@ -33,15 +43,24 @@ module.exports = {
             this.$shutdown();
           } else if (key.name === 't') {
             this.timestamp = !this.timestamp;
+          } else if (key.name === 'c') {
+            this.compact = !this.compact;
+          } else if (key.name === 's') {
+            this.showStatus = !this.showStatus;
+          } else if (key.name === 'p') {
+            if (!this.pauseOutput) {
+              console.log(chalk.bold.bgMagenta('Pausing, press p again to un-pause'));
+            }
+            this.pauseOutput = !this.pauseOutput;
           } else if (key.name === 'f') {
             this.waitForInput = true;
             rl.clearLine();
-            rl.question('Enter new filter: ', (ans) => {
+            rl.question(chalk.bgMagenta('Enter new filter:'), (ans) => {
               if (ans.length > 0) {
                 this.filter = new RegExp(ans, 'i');
-                console.log(`Filtering on ${ans}`);
+                console.log(chalk.bgMagenta(`Filtering on ${ans}`));
               } else {
-                console.log('Continuing with no filtering');
+                console.log(chalk.bgMagenta('Continuing with no filtering'));
                 this.filter = null;
               }
               this.waitForInput = false;
@@ -50,26 +69,28 @@ module.exports = {
         }
       });
     }
+    // timer to check for errors periodically
+    setInterval(this.checkForErrors, 5000);
     this.$ready('console ready');
   },
   events: {
     'volante.log'(obj) {
+      // force check of error count on error
+      if (obj.lvl === 'error' || obj.lvl === 'ready') {
+        this.checkForErrors();
+      }
       this.render(obj);
+      // exit if the option was set
       if (obj.lvl === 'error') {
         this.exitOnError && process.exit(1);
       }
     },
   },
-  props: {
-    timestamp: false,
-    level: 'any',
-    filter: null,
-    exitOnError: false,
-    srcLen: 16,
-  },
   data() {
     return {
       waitForInput: false,
+      pauseOutput: false,
+      isErrored: false,
     };
   },
   methods: {
@@ -79,6 +100,7 @@ module.exports = {
     render(obj) {
       // log if any filters match
       if (!this.waitForInput &&
+          !this.pauseOutput &&
           obj &&
           obj.lvl &&
           this.checkFilter(obj) &&
@@ -86,14 +108,26 @@ module.exports = {
           obj.src &&
           obj.msg) {
         let header = '';
+        if (this.showStatus) {
+          if (this.isErrored) {
+            if (obj.lvl === 'error') {
+              header += '𐄂';
+            } else {
+              header += chalk.red('𐄂');
+            }
+          } else {
+            header += '✓';
+          }
+          header += '|';
+        }
         if (this.timestamp) {
           header += chalk.magenta(obj.ts.toISOString());
-          header += " | ";
+          header += ' | ';
         }
         // log level
-        header += `${this.renderLevel(obj)} | `;
+        header += `${this.renderLevel(obj)}|`;
         // padded volante module name
-        header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) } | `;
+        header += `${obj.src.padEnd(this.srcLen).substring(0, this.srcLen) }|`;
         // log content items
         let content = [];
         for (let m of obj.msg) {
@@ -102,6 +136,7 @@ module.exports = {
               colors: true,
               breakLength: Infinity,
               depth: null,
+              compact: this.compact,
             }));
           } else {
             content.push(this.renderColor(obj.lvl, m));
@@ -116,16 +151,16 @@ module.exports = {
     renderLevel(obj) {
       switch (obj.lvl) {
         case 'debug':
-          return "DBG";
+          return 'DBG';
         case 'error':
-          return "ERR";
+          return 'ERR';
         case 'warning':
           return 'WRN';
         case 'ready':
           return 'RDY';
         case 'log':
         default:
-          return "LOG";
+          return 'LOG';
       }
     },
     //
@@ -169,6 +204,13 @@ module.exports = {
         return true;
       }
     },
+    //
+    // query Hub for status and if errored spoke count > 0, set local flag
+    //
+    checkForErrors() {
+      let status = this.$hub.getStatus();
+      this.isErrored = status.statusCounts.error > 0;
+    }
   }
 };
 
