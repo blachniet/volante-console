@@ -50,6 +50,7 @@ module.exports = {
         }
       });
     }
+    this.$ready();
   },
   events: {
     'volante.log'(obj) {
