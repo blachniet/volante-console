@@ -10,11 +10,13 @@ module.exports = {
   props: {
     timestamp: false,   // show timestamp column
     compact: true,      // option for util.inspect
-    showStatus: true,   // show overall status as check or x
     level: 'any',       // level filter
     filter: null,       // string or RegExp filter for entire content
     exitOnError: false, // trigger $shutdown on error
     srcLen: 16,         // width of source (usually spoke name) column
+  },
+  stats: {
+    numLines: 0,
   },
   init() {
     // print header
@@ -24,7 +26,7 @@ module.exports = {
     console.log(chalk.bgBlue('    \\\\\\\\////    ')  + chalk.bold.blue(' press f to filter'));
     console.log(chalk.bgBlue('     \\\\\\///     ')   + chalk.bold.blue(' press t to toggle timestamps'));
     console.log(chalk.bgBlue('      \\\\//      ')    + chalk.bold.blue(' press c to toggle compact inspect'));
-    console.log(chalk.bgBlue('       \\/       ')      + chalk.bold.blue(' press s to toggle status check'));
+    console.log(chalk.bgBlue('       \\/       ')      + chalk.bold.blue(' press s to print status for the wheel'));
     console.log(chalk.bgBlue('                ')      + chalk.bold.blue(' press p to pause output'));
 
     // add keypress handler if tty
@@ -46,7 +48,7 @@ module.exports = {
           } else if (key.name === 'c') {
             this.compact = !this.compact;
           } else if (key.name === 's') {
-            this.showStatus = !this.showStatus;
+            this.renderWheelStatus();
           } else if (key.name === 'p') {
             if (!this.pauseOutput) {
               console.log(chalk.bold.bgMagenta('Pausing, press p again to un-pause'));
@@ -107,19 +109,18 @@ module.exports = {
           obj.ts &&
           obj.src &&
           obj.msg) {
+        this.numLines++;
         let header = '';
-        if (this.showStatus) {
-          if (this.isErrored) {
-            if (obj.lvl === 'error') {
-              header += '𐄂';
-            } else {
-              header += chalk.red('𐄂');
-            }
+        if (this.isErrored) {
+          if (obj.lvl === 'error') {
+            header += '𐄂';
           } else {
-            header += '✓';
+            header += chalk.red('𐄂');
           }
-          header += '|';
+        } else {
+          header += '✓';
         }
+        header += '|';
         if (this.timestamp) {
           header += chalk.magenta(obj.ts.toISOString());
           header += ' | ';
@@ -182,6 +183,17 @@ module.exports = {
       }
     },
     //
+    // get the status of the Volante wheel from the Hub and print it out
+    renderWheelStatus() {
+      let st = this.$hub.getStatus();
+      console.log(util.inspect(st, {
+        colors: true,
+        breakLength: Infinity,
+        depth: null,
+        compact: false,
+      }));
+    },
+    //
     // main entry point for log rendering
     //
     checkFilter(obj) {
@@ -231,7 +243,6 @@ if (require.main === module) {
       this.$error('example error msg');
       this.$log('example object', { testVal: 1, testString: 'hello'});
       this.$log('example with lots of arguments', 1, 2, 3, 4, 5, 'six');
-      this.$shutdown();
     },
   });
 }
