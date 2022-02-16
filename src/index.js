@@ -8,12 +8,24 @@ const util = require('util');
 module.exports = {
   name: 'VolanteConsole',
   props: {
-    timestamp: false,   // show timestamp column
-    compact: true,      // option for util.inspect
-    level: 'any',       // level filter
-    filter: null,       // string or RegExp filter for entire content
-    exitOnError: false, // trigger $shutdown on error
-    srcLen: 16,         // width of source (usually spoke name) column
+    timestamp: false,        // show timestamp column
+    compact: true,           // option for util.inspect
+    level: 'any',            // level filter
+    filter: null,            // string or RegExp filter for entire content
+    exitOnError: false,      // trigger $shutdown on error
+    srcLen: 16,              // width of source (usually spoke name) column
+    statsDumpInterval: 2000, // ms interval for stats dump
+    statsDumpFrom: [],       // name of spoke to dump stats, or 'all' for all stats from all modules
+  },
+  updated() {
+    // clear any existing timer
+    if (this.statsIntervalHandle) {
+      clearInterval(this.statsIntervalHandle);
+    }
+    // start a new one if there is something to dump
+    if (this.statsDumpFrom.length > 0) {
+      setInterval(this.collectStats, this.statsDumpInterval);
+    }
   },
   stats: {
     numLines: 0,
@@ -93,6 +105,7 @@ module.exports = {
       waitForInput: false,
       pauseOutput: false,
       isErrored: false,
+      statsIntervalHandle: null,
     };
   },
   methods: {
@@ -194,6 +207,36 @@ module.exports = {
       }));
     },
     //
+    // called on a timer specified by statsDumpInterval, and dumps
+    // the stats for modules called out in statsDumpFrom
+    //
+    collectStats() {
+      let stats = this.$hub.getStatus();
+      // 'all' takes precedence over any other spoke names so we don't double-log
+      if (this.statsDumpFrom.indexOf('all') > -1) {
+        // rendering all stats for all spokes
+        for (let s of stats.spokes) {
+          this.renderStats(s);
+        }
+      } else {
+        for (let s of stats.spokes) {
+          if (this.statsDumpFrom.indexOf(s.name) > -1) {
+            this.renderStats(s);
+          }
+        }
+      }
+    },
+    //
+    // render the stats for the given spoke
+    //
+    renderStats(spoke) {
+      let values = [];
+      for (let [k,v] of Object.entries(spoke.stats)) {
+        values.push(`${k}:${v}`);
+      }
+      console.log(`STATS|${spoke.name.padEnd(this.srcLen).substring(0, this.srcLen) }|status: ${spoke.status.status}, ${values.join(', ')}`);
+    },
+    //
     // main entry point for log rendering
     //
     checkFilter(obj) {
@@ -225,24 +268,3 @@ module.exports = {
     }
   }
 };
-
-if (require.main === module) {
-  console.log('running test volante wheel');
-  const volante = require('volante');
-
-  let hub = new volante.Hub().debug();
-
-  hub.attachAll().attachFromObject(module.exports);
-
-  hub.attachFromObject({
-    name: 'TestSpoke',
-    init() {
-      this.$log('example log msg');
-      this.$debug('example debug msg');
-      this.$warn('example warning msg');
-      this.$error('example error msg');
-      this.$log('example object', { testVal: 1, testString: 'hello'});
-      this.$log('example with lots of arguments', 1, 2, 3, 4, 5, 'six');
-    },
-  });
-}

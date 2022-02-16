@@ -1,0 +1,14 @@
+{
+  "name": "ConsoleTest",
+  "debug": true,
+  "attach": [
+    "volante-console"
+  ],
+  "attachLocal": [
+    "./src",
+    "./example/example"
+  ],
+  "VolanteConsole": {
+    "statsDumpFrom": ["TestSpoke"]
+  }
+}
