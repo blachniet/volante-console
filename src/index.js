@@ -32,8 +32,8 @@ module.exports = {
   },
   init() {
     // print header
-    console.log(chalk.bgBlue('  ____    ____  ')   + chalk.bold.blue(` Powered by Volante v${this.$hub.version}`));
-    console.log(chalk.bgBlue('  \\\\\\\\\\  /////  ') + chalk.bold.blue(` ${(new Date).toISOString()}`));
+    console.log(chalk.bgBlue('  ____    ____  ')   + chalk.bold.blue(` ${this.getName()}Powered by Volante v${this.$hub.version}`));
+    console.log(chalk.bgBlue('  \\\\\\\\\\  /////  ') + chalk.bold.blue(` started on ${(new Date).toISOString()}`));
     console.log(chalk.bgBlue('   \\\\\\\\\\/////   ') + chalk.bold.blue(' press q to shutdown'));
     console.log(chalk.bgBlue('    \\\\\\\\////    ')  + chalk.bold.blue(' press f to filter'));
     console.log(chalk.bgBlue('     \\\\\\///     ')   + chalk.bold.blue(' press t to toggle timestamps'));
@@ -265,6 +265,12 @@ module.exports = {
     checkForErrors() {
       let status = this.$hub.getStatus();
       this.isErrored = status.statusCounts.error > 0;
-    }
+    },
+    getName() {
+      if (this.$hub.name !== 'VolanteHub') {
+        return `${this.$hub.name} - `;
+      }
+      return '';
+    },
   }
 };
