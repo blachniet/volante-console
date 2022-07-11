@@ -14,7 +14,7 @@
     "chalk": "4.1.2"
   },
   "devDependencies": {
-    "volante": "^6.3.0"
+    "volante": "^6.6.0"
   },
   "keywords": [
     "volante"
