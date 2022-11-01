@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+/*eslint no-eval: "warning" */
 const util = require('util');
 
 //
@@ -16,6 +16,8 @@ module.exports = {
     srcLen: 16,              // width of source (usually spoke name) column
     statsDumpInterval: 2000, // ms interval for stats dump
     statsDumpFrom: [],       // name of spoke to dump stats, or 'all' for all stats from all modules
+    monochrome: false,       // flag for no-color output
+    allowEval: true,         // flag to allow eval function, might be good to disable for production
   },
   updated() {
     // clear any existing timer
@@ -32,14 +34,15 @@ module.exports = {
   },
   init() {
     // print header
-    console.log(chalk.bgBlue('  ____    ____  ')   + chalk.bold.blue(` ${this.getName()}Powered by Volante v${this.$hub.version}`));
-    console.log(chalk.bgBlue('  \\\\\\\\\\  /////  ') + chalk.bold.blue(` started on ${(new Date).toISOString()}`));
-    console.log(chalk.bgBlue('   \\\\\\\\\\/////   ') + chalk.bold.blue(' press q to shutdown'));
-    console.log(chalk.bgBlue('    \\\\\\\\////    ')  + chalk.bold.blue(' press f to filter'));
-    console.log(chalk.bgBlue('     \\\\\\///     ')   + chalk.bold.blue(' press t to toggle timestamps'));
-    console.log(chalk.bgBlue('      \\\\//      ')    + chalk.bold.blue(' press c to toggle compact inspect'));
-    console.log(chalk.bgBlue('       \\/       ')      + chalk.bold.blue(' press s to print status for the wheel'));
-    console.log(chalk.bgBlue('                ')      + chalk.bold.blue(' press p to pause output'));
+    console.log(this.colorz('  ____    ____  ', 'bg.blue')   + this.colorz(` ${this.getName()}Powered by Volante v${this.$hub.version}`, 'bold.blue'));
+    console.log(this.colorz('  \\\\\\\\\\  /////  ', 'bg.blue') + this.colorz(` started on ${(new Date).toISOString()}`, 'bold.blue'));
+    console.log(this.colorz('   \\\\\\\\\\/////   ', 'bg.blue') + this.colorz(' press q to shutdown', 'bold.blue'));
+    console.log(this.colorz('    \\\\\\\\////    ', 'bg.blue')  + this.colorz(' press f to filter', 'bold.blue'));
+    console.log(this.colorz('     \\\\\\///     ', 'bg.blue')   + this.colorz(' press t to toggle timestamps', 'bold.blue'));
+    console.log(this.colorz('      \\\\//      ', 'bg.blue')    + this.colorz(' press c to toggle compact inspect', 'bold.blue'));
+    console.log(this.colorz('       \\/       ', 'bg.blue')      + this.colorz(' press s to print status for the wheel', 'bold.blue'));
+    console.log(this.colorz('                ', 'bg.blue')      + this.colorz(' press p to pause output', 'bold.blue'));
+    console.log(this.colorz('                ', 'bg.blue')      + this.colorz(' press e to evaluate statement', 'bold.blue'));
 
     // add keypress handler if tty
     if (Boolean(process.stdout.isTTY) && process.stdin.setRawMode){
@@ -63,18 +66,34 @@ module.exports = {
             this.renderWheelStatus();
           } else if (key.name === 'p') {
             if (!this.pauseOutput) {
-              console.log(chalk.bold.bgMagenta('Pausing, press p again to un-pause'));
+              console.log(this.colorz('Pausing, press p again to un-pause', 'bg.magenta'));
             }
             this.pauseOutput = !this.pauseOutput;
+          } else if (key.name === 'e' && this.allowEval) {
+            this.waitForInput = true;
+            rl.clearLine();
+            rl.question(this.colorz('Enter statement:', 'bg.magenta'), (ans) => {
+              if (ans.length > 0) {
+                (function(){
+        	        console.log(util.inspect(eval(ans), {
+                    colors: !this.monochrome,
+                    breakLength: Infinity,
+                    depth: null,
+                    compact: false,
+                  }));
+                }).call(this);
+              }
+              this.waitForInput = false;
+            });
           } else if (key.name === 'f') {
             this.waitForInput = true;
             rl.clearLine();
-            rl.question(chalk.bgMagenta('Enter new filter:'), (ans) => {
+            rl.question(this.colorz('Enter new filter:', 'bg.magenta'), (ans) => {
               if (ans.length > 0) {
                 this.filter = new RegExp(ans, 'i');
-                console.log(chalk.bgMagenta(`Filtering on ${ans}`));
+                console.log(this.colorz(`Filtering on ${ans}`, 'bg.magenta'));
               } else {
-                console.log(chalk.bgMagenta('Continuing with no filtering'));
+                console.log(this.colorz('Continuing with no filtering', 'bg.magenta'));
                 this.filter = null;
               }
               this.waitForInput = false;
@@ -109,6 +128,34 @@ module.exports = {
     };
   },
   methods: {
+    colorz(str, color) {
+      if (this.monochrome) {
+        return str;
+      }
+      switch(color) {
+        case 'bg.red':
+          return `\x1b[41m${str}\x1b[0m`;
+        case 'bg.green':
+          return `\x1b[42m${str}\x1b[0m`;
+        case 'bg.blue':
+          return `\x1b[44m${str}\x1b[0m`;
+        case 'bg.magenta':
+          return `\x1b[45m${str}\x1b[0m`;
+        case 'bold.blue':
+          return `\x1b[34;1m${str}\x1b[0m`;
+        case 'red':
+          return `\x1b[31m${str}\x1b[0m`;
+        case 'green':
+          return `\x1b[32m${str}\x1b[0m`;
+        case 'yellow':
+          return `\x1b[33m${str}\x1b[0m`;
+        case 'cyan':
+          return `\x1b[36m${str}\x1b[0m`;
+        default:
+          console.warn(`not implemented color code ${color}`);
+          return str;
+      }
+    },
     //
     // main entry point for log rendering
     //
@@ -128,14 +175,14 @@ module.exports = {
           if (obj.lvl === 'error') {
             header += '𐄂';
           } else {
-            header += chalk.red('𐄂');
+            header += this.colorz('𐄂', 'red');
           }
         } else {
           header += '✓';
         }
         header += '|';
         if (this.timestamp) {
-          header += chalk.magenta(obj.ts.toISOString());
+          header += this.colorz(obj.ts.toISOString(), 'magenta');
           header += ' | ';
         }
         // log level
@@ -147,7 +194,7 @@ module.exports = {
         for (let m of obj.msg) {
           if (typeof(m) === 'object') {
             content.push(util.inspect(m, {
-              colors: true,
+              colors: !this.monochrome,
               breakLength: Infinity,
               depth: null,
               compact: this.compact,
@@ -183,16 +230,16 @@ module.exports = {
     renderColor(lvl, str) {
       switch (lvl) {
         case 'debug':
-          return chalk.cyan(str);
+          return this.colorz(str, 'cyan');
         case 'error':
-          return chalk.bgRed(str);
+          return this.colorz(str, 'bg.red');
         case 'warning':
-          return chalk.yellow(str);
+          return this.colorz(str, 'yellow');
         case 'ready':
-          return chalk.bgGreen(str);
+          return this.colorz(str, 'bg.green');
         case 'log':
         default:
-          return chalk.green(str);
+          return this.colorz(str, 'green');
       }
     },
     //
@@ -211,17 +258,19 @@ module.exports = {
     // the stats for modules called out in statsDumpFrom
     //
     collectStats() {
-      let stats = this.$hub.getStatus();
-      // 'all' takes precedence over any other spoke names so we don't double-log
-      if (this.statsDumpFrom.indexOf('all') > -1) {
-        // rendering all stats for all spokes
-        for (let s of stats.spokes) {
-          this.renderStats(s);
-        }
-      } else {
-        for (let s of stats.spokes) {
-          if (this.statsDumpFrom.indexOf(s.name) > -1) {
+      if (!this.waitForInput) {
+        let stats = this.$hub.getStatus();
+        // 'all' takes precedence over any other spoke names so we don't double-log
+        if (this.statsDumpFrom.indexOf('all') > -1) {
+          // rendering all stats for all spokes
+          for (let s of stats.spokes) {
             this.renderStats(s);
+          }
+        } else {
+          for (let s of stats.spokes) {
+            if (this.statsDumpFrom.indexOf(s.name) > -1) {
+              this.renderStats(s);
+            }
           }
         }
       }

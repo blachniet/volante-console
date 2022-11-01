@@ -16,6 +16,9 @@ module.exports = {
     exampleCounter2: 0,
   },
   methods: {
+    helloWorld() {
+      console.log('HELLO WORLD');
+    },
     incrementCounter() {
       this.exampleCounter++;
       this.exampleCounter2 += 2;
