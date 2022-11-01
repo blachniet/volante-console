@@ -6,7 +6,6 @@
     "./example/example"
   ],
   "VolanteConsole": {
-    "statsDumpFrom": ["TestSpoke"],
-    "allowEval": false
+    "statsDumpFrom": ["TestSpoke"]
   }
 }
