@@ -149,6 +149,8 @@ module.exports = {
           return `\x1b[32m${str}\x1b[0m`;
         case 'yellow':
           return `\x1b[33m${str}\x1b[0m`;
+        case 'magenta':
+          return `\x1b[35m${str}\x1b[0m`;
         case 'cyan':
           return `\x1b[36m${str}\x1b[0m`;
         default:
