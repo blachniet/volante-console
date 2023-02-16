@@ -44,7 +44,7 @@ module.exports = {
     console.log(this.colorz('                ', 'bg.blue')      + this.colorz(' press p to pause output', 'bold.blue'));
     console.log(this.colorz('                ', 'bg.blue')      + this.colorz(' press e to evaluate statement', 'bold.blue'));
 
-    // add keypress handler if tty
+    // add keypress handler if there is tty
     if (Boolean(process.stdout.isTTY) && process.stdin.setRawMode){
       const readline = require('readline');
       const rl = readline.createInterface({
@@ -74,14 +74,18 @@ module.exports = {
             rl.clearLine();
             rl.question(this.colorz('Enter statement:', 'bg.magenta'), (ans) => {
               if (ans.length > 0) {
-                (function(){
-        	        console.log(util.inspect(eval(ans), {
-                    colors: !this.monochrome,
-                    breakLength: Infinity,
-                    depth: null,
-                    compact: false,
-                  }));
-                }).call(this);
+                try {
+                  (function(){
+          	        console.log(util.inspect(eval(ans), {
+                      colors: !this.monochrome,
+                      breakLength: Infinity,
+                      depth: null,
+                      compact: false,
+                    }));
+                  }).call(this);
+                } catch (e) {
+                  console.log(this.colorz(e, 'red'));
+                }
               }
               this.waitForInput = false;
             });
@@ -317,6 +321,9 @@ module.exports = {
       let status = this.$hub.getStatus();
       this.isErrored = status.statusCounts.error > 0;
     },
+    //
+    // try to resolve name
+    //
     getName() {
       if (this.$hub.name !== 'VolanteHub') {
         return `${this.$hub.name} - `;
