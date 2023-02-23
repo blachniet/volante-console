@@ -30,8 +30,8 @@ module.exports = {
       setInterval(this.collectStats, this.statsDumpInterval);
     }
     if (this.catchUnhandled) {
-      process.on('unhandledRejection', (reason, p) => {
-        console.warn(this.colorz(`Unhandled Rejection at: Promise ${p} reason: ${reason}`, 'red'));
+      process.on('unhandledRejection', (reason) => {
+        console.warn(this.colorz(`\nUnhandled Rejection at: ${reason.stack} reason: ${reason}`, 'red'));
       });
     }
   },
