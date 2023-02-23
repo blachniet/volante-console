@@ -19,6 +19,7 @@ module.exports = {
     monochrome: false,       // flag for no-color output
     allowEval: true,         // flag to allow eval function, might be good to disable for production
     catchUnhandled: true     // add handler to process to print out unhandledRejection events
+                             // note that better
   },
   updated() {
     // clear any existing timer
@@ -30,8 +31,8 @@ module.exports = {
       setInterval(this.collectStats, this.statsDumpInterval);
     }
     if (this.catchUnhandled) {
-      process.on('unhandledRejection', (reason) => {
-        console.warn(this.colorz(`\nUnhandled Rejection at: ${reason.stack} reason: ${reason}`, 'red'));
+      process.on('unhandledRejection', (reason, p) => {
+        console.warn(this.colorz('\nUNHANDLED REJECTION\n', 'red'), p, reason, '\n');
       });
     }
   },
