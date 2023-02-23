@@ -18,6 +18,7 @@ module.exports = {
     statsDumpFrom: [],       // name of spoke to dump stats, or 'all' for all stats from all modules
     monochrome: false,       // flag for no-color output
     allowEval: true,         // flag to allow eval function, might be good to disable for production
+    catchUnhandled: true     // add handler to process to print out unhandledRejection events
   },
   updated() {
     // clear any existing timer
@@ -27,6 +28,11 @@ module.exports = {
     // start a new one if there is something to dump
     if (this.statsDumpFrom.length > 0) {
       setInterval(this.collectStats, this.statsDumpInterval);
+    }
+    if (this.catchUnhandled) {
+      process.on('unhandledRejection', (reason, p) => {
+        console.warn(this.colorz(`Unhandled Rejection at: Promise ${p} reason: ${reason}`, 'red'));
+      });
     }
   },
   stats: {
